@@ -787,7 +787,7 @@ function pullFromGAS(callback) {
     S.instructors = normId(d.instructors || []);
     S.schedules   = normId(d.schedules   || []);
     S.assignments = normId(d.assignments || []);
-    S.holidays    = d.holidays           || [];
+    S.holidays    = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
     saveLS();
     refreshDash();
     renderCal();
@@ -845,7 +845,7 @@ function testGASConnection(cb) {
       S.instructors = normId(d.instructors || []);
       S.schedules   = normId(d.schedules   || []);
       S.assignments = normId(d.assignments || []);
-      S.holidays = d.holidays || [];
+      S.holidays = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
       saveLS(); refreshAll();
       toast('\u2705 \u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u2014 ' + (d.students||[]).length + ' \u0E19\u0E28\u0E20., ' + (d.topics||[]).length + ' \u0E2B\u0E31\u0E27\u0E02\u0E49\u0E2D');
       if (cb) cb(true, d);
@@ -868,7 +868,7 @@ function fullSync() {
       S.instructors = normId(d.instructors || []);
       S.schedules   = normId(d.schedules   || []);
       S.assignments = normId(d.assignments || []);
-      S.holidays    = d.holidays           || [];
+      S.holidays    = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
       saveLS();
       refreshDash();
       renderCal();
