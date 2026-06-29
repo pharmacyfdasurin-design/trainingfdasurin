@@ -1931,7 +1931,12 @@ function saveHol() {
   S.holidays.sort(function(a, b) { return a.dt.localeCompare(b.dt); });
   saveLS();
   syncSheet('Holidays', S.holidays);
-  renderHolTbl(); renderCal(); renderWeek();
+  // Guard: ensure schedules not lost
+  var _schBkp = S.schedules.slice();
+  if (!S.schedules.length && _schBkp.length) {
+    S.schedules = _schBkp; saveLS();
+  }
+  renderHolTbl(); refreshDash(); renderCal(); renderWeek();
   clrHol();
   toast('✅ บันทึกวันหยุดสำเร็จ');
 }
