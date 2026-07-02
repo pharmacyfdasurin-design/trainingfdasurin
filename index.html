@@ -372,7 +372,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="sfTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายชื่อนักศึกษาทั้งหมด</div></div>
-    <div class="cb"><input class="finp" id="srch_stu" placeholder="🔍 ค้นชื่อ / มหาวิทยาลัย..." oninput="renderStuTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชื่อเล่น</th><th>มหาวิทยาลัย</th><th>โทร.</th><th>ระยะเวลา</th><th>จัดการ</th></tr></thead><tbody id="sTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_stu" placeholder="🔍 ค้นชื่อ / มหาวิทยาลัย..." oninput="renderStuTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชื่อเล่น</th><th>มหาวิทยาลัย</th><th>โทร.</th><th>ระยะเวลา</th><th>จัดการ</th></tr></thead><tbody id="sTbody"></tbody></table></div></div></div>
   </div>
 </div>
 
@@ -416,7 +416,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="tfTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายการหัวข้อทั้งหมด</div></div>
-    <div class="cb"><input class="finp" id="srch_top" placeholder="🔍 ค้นหัวข้อ / ประเภท..." oninput="renderTopTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ประเภทงาน</th><th>หัวข้อ</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead><tbody id="tTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_top" placeholder="🔍 ค้นหัวข้อ / ประเภท..." oninput="renderTopTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ประเภทงาน</th><th>หัวข้อ</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead><tbody id="tTbody"></tbody></table></div></div></div>
   </div>
 </div>
 
@@ -445,7 +445,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="ifTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายชื่ออาจารย์ทั้งหมด</div></div>
-    <div class="cb"><input class="finp" id="srch_ins" placeholder="🔍 ค้นชื่อ / ตำแหน่ง..." oninput="renderInsTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>หัวข้อที่รับผิดชอบ</th><th>โทร.</th><th>จัดการ</th></tr></thead><tbody id="iTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_ins" placeholder="🔍 ค้นชื่อ / ตำแหน่ง..." oninput="renderInsTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>หัวข้อที่รับผิดชอบ</th><th>โทร.</th><th>จัดการ</th></tr></thead><tbody id="iTbody"></tbody></table></div></div></div>
   </div>
 </div>
 
@@ -481,7 +481,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="schTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายการตารางทั้งหมด</div></div>
-    <div class="cb"><input class="finp" id="srch_sch" placeholder="🔍 ค้นวันที่ / หัวข้อ..." oninput="renderSchTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>วันที่</th><th>ช่วงเวลา</th><th>หัวข้อ</th><th>อาจารย์</th><th>นักศึกษา</th><th>จัดการ</th></tr></thead><tbody id="schTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_sch" placeholder="🔍 ค้นวันที่ / หัวข้อ..." oninput="renderSchTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>วันที่</th><th>ช่วงเวลา</th><th>หัวข้อ</th><th>อาจารย์</th><th>นักศึกษา</th><th>จัดการ</th></tr></thead><tbody id="schTbody"></tbody></table></div></div></div>
   </div>
 </div>
 
@@ -998,14 +998,16 @@ function showSec(id, el) {
   var sec = document.getElementById('sec-'+id);
   if (sec) sec.classList.add('active');
   if (el) el.classList.add('active');
-  if (id==='dashboard') refreshDash();
-  else if (id==='cal-month') renderCal();
-  else if (id==='cal-week') renderWeek();
-  else if (id==='students') { renderStuTbl(); buildMSBoxes(); }
-  else if (id==='topics') renderTopTbl();
+  if      (id==='dashboard')   { refreshDash(); }
+  else if (id==='cal-month')   { renderCal(); }
+  else if (id==='cal-week')    { renderWeek(); }
+  else if (id==='students')    { renderStuTbl(); buildMSBoxes(); }
+  else if (id==='topics')      { renderTopTbl(); renderTopTypeList(); renderTopTypeSelect(); }
   else if (id==='instructors') { renderInsTbl(); buildTopBoxForIns(); }
-  else if (id==='schedule') { renderSchTbl(); buildSchDrops(); }
+  else if (id==='schedule')    { renderSchTbl(); buildSchDrops(); }
   else if (id==='assignments') { renderAsgnTbl(); buildAsgnDrops(); }
+  else if (id==='holidays')    { renderHolTbl(); }
+  else if (id==='pdf')         { if(typeof initPDFSection==='function') initPDFSection(); }
 }
 
 function reqAdmin(id, el) {
@@ -1951,11 +1953,6 @@ function printPDF(){
 }
 
 // Hook into showSec for PDF init
-var _origShowSec = showSec;
-showSec = function(id, el){
-  _origShowSec(id, el);
-  if(id==='pdf') initPDFSection();
-};
 
 
 
@@ -2008,11 +2005,6 @@ function renderHolTbl() {
       + '</div></td></tr>';
   }).join('');
 }
-var _showSecHol = showSec;
-showSec = function(id, el) {
-  _showSecHol(id, el);
-  if (id === 'holidays') renderHolTbl();
-};
 
 
 function debugData() {
