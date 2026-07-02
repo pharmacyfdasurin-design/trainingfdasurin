@@ -372,7 +372,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="sfTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายชื่อนักศึกษาทั้งหมด</div></div>
-    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชื่อเล่น</th><th>มหาวิทยาลัย</th><th>โทร.</th><th>ระยะเวลา</th><th>จัดการ</th></tr></thead><tbody id="sTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_stu" placeholder="🔍 ค้นชื่อ / มหาวิทยาลัย..." oninput="renderStuTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชื่อเล่น</th><th>มหาวิทยาลัย</th><th>โทร.</th><th>ระยะเวลา</th><th>จัดการ</th></tr></thead><tbody id="sTbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -384,18 +384,39 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
     <button class="tab-btn" onclick="swTab(this,'tfTbl')">📋 รายการ</button>
   </div>
   <div id="tfForm">
+    <!-- Type Registration -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="ch"><span>🏷️</span><div class="ch-t">จัดการประเภทงาน</div></div>
+      <div class="cb">
+        <div class="fgrid">
+          <div class="ff"><label class="flbl">ชื่อประเภทงาน <span class="req">*</span></label>
+            <input class="finp" id="tt_nm" placeholder="เช่น งาน RDU, งานคุ้มครองผู้บริโภค"></div>
+          <div class="ff" style="display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="bgrp" style="margin:0">
+              <button class="btn btn-p" onclick="saveTopType()">💾 เพิ่มประเภท</button>
+            </div>
+          </div>
+        </div>
+        <div id="topTypeList" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+    </div>
+    <!-- Topic Registration -->
     <div class="card"><div class="ch"><span>📚</span><div class="ch-t">ลงทะเบียนหัวข้อ</div></div>
     <div class="cb">
       <div class="fgrid">
-        <div class="ff full"><label class="flbl">หัวข้อการฝึกปฏิบัติงาน <span class="req">*</span></label><input class="finp" id="t_nm" placeholder="ระบุหัวข้อ เช่น RDU community, RDU province"></div>
-        <div class="ff full"><label class="flbl">รายละเอียด</label><textarea class="fta" id="t_ds" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></textarea></div>
+        <div class="ff"><label class="flbl">ประเภทงาน <span class="req">*</span></label>
+          <select class="finp" id="t_type"><option value="">-- เลือกประเภทงาน --</option></select></div>
+        <div class="ff"><label class="flbl">หัวข้อการฝึกปฏิบัติงาน <span class="req">*</span></label>
+          <input class="finp" id="t_nm" placeholder="ระบุหัวข้อ"></div>
+        <div class="ff full"><label class="flbl">รายละเอียด</label>
+          <textarea class="fta" id="t_ds" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)" rows="2"></textarea></div>
       </div>
       <div class="bgrp"><button class="btn btn-p" onclick="saveTop()">💾 บันทึก</button><button class="btn btn-o" onclick="clrTop()">🔄 ล้าง</button></div>
     </div></div>
   </div>
   <div id="tfTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายการหัวข้อทั้งหมด</div></div>
-    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>หัวข้อ</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead><tbody id="tTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_top" placeholder="🔍 ค้นหัวข้อ / ประเภท..." oninput="renderTopTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ประเภทงาน</th><th>หัวข้อ</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead><tbody id="tTbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -424,7 +445,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="ifTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายชื่ออาจารย์ทั้งหมด</div></div>
-    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>หัวข้อที่รับผิดชอบ</th><th>โทร.</th><th>จัดการ</th></tr></thead><tbody id="iTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_ins" placeholder="🔍 ค้นชื่อ / ตำแหน่ง..." oninput="renderInsTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>หัวข้อที่รับผิดชอบ</th><th>โทร.</th><th>จัดการ</th></tr></thead><tbody id="iTbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -460,7 +481,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
   </div>
   <div id="schTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายการตารางทั้งหมด</div></div>
-    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>วันที่</th><th>ช่วงเวลา</th><th>หัวข้อ</th><th>อาจารย์</th><th>นักศึกษา</th><th>จัดการ</th></tr></thead><tbody id="schTbody"></tbody></table></div></div>
+    <div class="cb"><input class="finp" id="srch_sch" placeholder="🔍 ค้นวันที่ / หัวข้อ..." oninput="renderSchTbl(this.value)" style="margin-bottom:10px"><div style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>วันที่</th><th>ช่วงเวลา</th><th>หัวข้อ</th><th>อาจารย์</th><th>นักศึกษา</th><th>จัดการ</th></tr></thead><tbody id="schTbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -587,6 +608,7 @@ var S = {
   admin: false,
   students: [],
   topics: [],
+  topTypes: [],
   instructors: [],
   schedules: [],
   assignments: [],
@@ -610,6 +632,7 @@ function saveLS() {
     localStorage.setItem('fda_rdu_v2', JSON.stringify({
       students: S.students,
       topics: S.topics,
+      topTypes: S.topTypes,
       instructors: S.instructors,
       schedules: S.schedules,
       assignments: S.assignments,
@@ -635,6 +658,7 @@ function loadLS() {
     var d = JSON.parse(localStorage.getItem('fda_rdu_v2') || '{}');
     S.students = normId(d.students);
     S.topics = normId(d.topics);
+    S.topTypes = d.topTypes || [];
     S.instructors = normId(d.instructors);
     S.schedules = normId(d.schedules);
     S.assignments = normId(d.assignments);
@@ -781,6 +805,13 @@ function pullFromGAS(callback) {
     if (err || !d || !d.success) {
       toast('\u26A0\uFE0F \u0E2D\u0E48\u0E32\u0E19\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49: ' + (err||JSON.stringify(d||{}).slice(0,50)));
       if (callback) callback(null); return;
+    }
+    // Skip overwrite if user made local changes in last 15 seconds
+    var _now = Date.now();
+    if (_localChanged && (_now - _localChanged) < 15000) {
+      toast('ℹ️ รอข้อมูลส่ง GAS เสร็จก่อน...');
+      if (callback) callback(d);
+      return;
     }
     S.students    = normId(d.students    || []);
     S.topics      = normId(d.topics      || []);
@@ -1310,7 +1341,7 @@ function saveStu() {
     S.students[idx]=obj;
   } else { S.students.push(obj); }
   S.editStu=null;
-  saveLS(); syncSheet('Students', S.students); renderStuTbl(); clrStu();
+  _localChanged=Date.now(); saveLS(); syncSheet('Students', S.students); renderStuTbl(); clrStu();
   refreshDash();
   toast('✅ บันทึกข้อมูลนักศึกษาสำเร็จ');
 }
@@ -1322,8 +1353,10 @@ function clrStu(){
   document.getElementById('sFrmStatus').textContent='';
 }
 
-function renderStuTbl(){
-  document.getElementById('sTbody').innerHTML=S.students.map(function(s,i){
+function renderStuTbl(q){
+  var rows=S.students.slice();
+  if(q){q=q.toLowerCase();rows=rows.filter(function(s){return((s.fn||'')+' '+(s.ln||'')).toLowerCase().includes(q)||(s.univ||'').toLowerCase().includes(q)||(s.nick||'').toLowerCase().includes(q);});}
+  document.getElementById('sTbody').innerHTML=rows.map(function(s,i){
     return '<tr><td>'+(i+1)+'</td><td>'+s.pfx+'</td><td>'+s.fn+'</td><td>'+s.ln+'</td><td>'+s.nick+'</td>'
       +'<td>'+s.univ+'</td><td>'+s.ph+'</td>'
       +'<td style="white-space:nowrap">'+fmtS(s.st)+' – '+fmtS(s.en)+'</td>'
@@ -1348,32 +1381,36 @@ function editStu(id){
 function delStu(id){
   if(!confirm('ลบข้อมูลนักศึกษา?')) return;
   S.students=S.students.filter(function(s){return Number(s.id)!==Number(id);});
-  saveLS(); syncSheet('Students', S.students); renderStuTbl(); refreshDash(); toast('🗑️ ลบแล้ว');
+  _localChanged=Date.now(); saveLS(); syncSheet('Students', S.students); renderStuTbl(); refreshDash(); toast('🗑️ ลบแล้ว');
 }
 
 // ============================================================
 // TOPICS CRUD
 // ============================================================
 function saveTop(){
+  var tp=document.getElementById('t_type').value;
   var nm=document.getElementById('t_nm').value.trim();
-  if(!nm){toast('⚠️ กรุณากรอกชื่อหัวข้อ');return;}
+  if(!tp||!nm){toast('⚠️ กรุณาเลือกประเภทงานและระบุหัวข้อ');return;}
   var ds=document.getElementById('t_ds').value.trim();
   if(S.editTop){
     var idx=S.topics.findIndex(function(x){return Number(x.id)===Number(S.editTop);});
-    S.topics[idx]={id:S.editTop,nm:nm,ds:ds};
+    S.topics[idx]={id:S.editTop,type:tp,nm:nm,ds:ds};
     S.editTop=null;
-  } else { S.topics.push({id:uid(),nm:nm,ds:ds}); }
-  saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); clrTop();
-  // update dropdowns in other sections
+  } else { S.topics.push({id:uid(),type:tp,nm:nm,ds:ds}); }
+  _localChanged=Date.now(); saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); clrTop();
   buildSchDrops(); buildAsgnDrops(); buildTopBoxForIns();
   toast('✅ บันทึกหัวข้อสำเร็จ');
 }
 
 function clrTop(){ document.getElementById('t_nm').value=''; document.getElementById('t_ds').value=''; S.editTop=null; }
 
-function renderTopTbl(){
-  document.getElementById('tTbody').innerHTML=S.topics.map(function(t,i){
-    return '<tr><td>'+(i+1)+'</td><td style="font-weight:500">'+t.nm+'</td>'
+function renderTopTbl(q){
+  var rows=S.topics.slice();
+  if(q){q=q.toLowerCase();rows=rows.filter(function(t){return(t.nm||'').toLowerCase().includes(q)||(t.type||'').toLowerCase().includes(q)||(t.ds||'').toLowerCase().includes(q);});}
+  rows.sort(function(a,b){return(a.type||'').localeCompare(b.type||'')||(a.nm||'').localeCompare(b.nm||'');});
+  document.getElementById('tTbody').innerHTML=rows.map(function(t,i){
+    var typeLbl=t.type?'<span style="background:var(--lav-pale);color:var(--lav);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">'+t.type+'</span>':'-';
+    return '<tr><td>'+(i+1)+'</td><td>'+typeLbl+'</td><td style="font-weight:500">'+t.nm+'</td>'
       +'<td style="font-size:11px;color:var(--txt2)">'+(t.ds||'-')+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editTop('+t.id+')">✏️</button>'
@@ -1386,6 +1423,7 @@ function editTop(id){
   var t=S.topics.find(function(x){return Number(x.id)===Number(id);});
   if(!t) return;
   S.editTop=id;
+  document.getElementById('t_type').value=t.type||'';
   document.getElementById('t_nm').value=t.nm;
   document.getElementById('t_ds').value=t.ds||'';
   swTab(document.querySelector('#sec-topics .tab-btn'),'tfForm');
@@ -1394,7 +1432,7 @@ function editTop(id){
 function delTop(id){
   if(!confirm('ลบหัวข้อ?')) return;
   S.topics=S.topics.filter(function(t){return Number(t.id)!==Number(id);});
-  saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); toast('🗑️ ลบแล้ว');
+  _localChanged=Date.now(); saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); toast('🗑️ ลบแล้ว');
 }
 
 // ============================================================
@@ -1419,7 +1457,7 @@ function saveInst(){
     S.instructors[idx]=obj;
     S.editIns=null;
   } else { S.instructors.push(obj); }
-  saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); clrInst();
+  _localChanged=Date.now(); saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); clrInst();
   buildSchDrops(); buildAsgnDrops();
   refreshDash();
   toast('✅ บันทึกอาจารย์สำเร็จ');
@@ -1431,8 +1469,10 @@ function clrInst(){
   S.editIns=null;
 }
 
-function renderInsTbl(){
-  document.getElementById('iTbody').innerHTML=S.instructors.map(function(ins,i){
+function renderInsTbl(q){
+  var rows=S.instructors.slice();
+  if(q){q=q.toLowerCase();rows=rows.filter(function(ins){return((ins.fn||'')+' '+(ins.ln||'')).toLowerCase().includes(q)||(ins.pos||'').toLowerCase().includes(q);});}
+  document.getElementById('iTbody').innerHTML=rows.map(function(ins,i){
     var tns=ins.tops.map(function(tid){
       var t=S.topics.find(function(x){return x.id==tid;});
       return t?'<span class="badge bsky" style="font-size:10px;margin:1px">'+t.nm+'</span>':'';
@@ -1462,7 +1502,7 @@ function editIns(id){
 function delIns(id){
   if(!confirm('ลบอาจารย์?')) return;
   S.instructors=S.instructors.filter(function(i){return Number(i.id)!==Number(id);});
-  saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); toast('🗑️ ลบแล้ว');
+  _localChanged=Date.now(); saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); toast('🗑️ ลบแล้ว');
 }
 
 // ============================================================
@@ -1484,7 +1524,7 @@ function saveSch(){
     var idx=S.schedules.findIndex(function(x){return Number(x.id)===Number(S.editSch);});
     S.schedules[idx]=obj; S.editSch=null;
   } else { S.schedules.push(obj); }
-  saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); clrSch();
+  _localChanged=Date.now(); saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); clrSch();
   refreshDash(); renderCal(); renderWeek();
   toast('✅ บันทึกตารางสำเร็จ');
 }
@@ -1498,8 +1538,10 @@ function clrSch(){
   S.editSch=null;
 }
 
-function renderSchTbl(){
-  document.getElementById('schTbody').innerHTML=S.schedules.map(function(sc,i){
+function renderSchTbl(q){
+  var rows=S.schedules.slice();
+  if(q){q=q.toLowerCase();rows=rows.filter(function(sc){return fmtD(sc.dt).includes(q)||topName(sc.topId).toLowerCase().includes(q)||sc.insIds.map(insName).join(' ').toLowerCase().includes(q);});}
+  document.getElementById('schTbody').innerHTML=rows.map(function(sc,i){
     var stuN=sc.stuIds.map(stuName).join(', ');
     var insN=sc.insIds.map(insName).join(', ');
     return '<tr><td>'+(i+1)+'</td>'
@@ -1530,7 +1572,7 @@ function editSch(id){
 function delSch(id){
   if(!confirm('ลบรายการ?')) return;
   S.schedules=S.schedules.filter(function(s){return Number(s.id)!==Number(id);});
-  saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); renderCal(); renderWeek(); toast('🗑️ ลบแล้ว');
+  _localChanged=Date.now(); saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); renderCal(); renderWeek(); toast('🗑️ ลบแล้ว');
 }
 
 // ============================================================
@@ -1552,7 +1594,7 @@ function saveAsgn(){
     var idx=S.assignments.findIndex(function(x){return Number(x.id)===Number(S.editAsgn);});
     S.assignments[idx]=obj; S.editAsgn=null;
   } else { S.assignments.push(obj); }
-  saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); clrAsgn();
+  _localChanged=Date.now(); saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); clrAsgn();
   renderWeek();
   toast('✅ บันทึกงานมอบหมายสำเร็จ');
 }
@@ -1593,7 +1635,7 @@ function editAsgn(id){
 function delAsgn(id){
   if(!confirm('ลบงาน?')) return;
   S.assignments=S.assignments.filter(function(a){return Number(a.id)!==Number(id);});
-  saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); toast('🗑️ ลบแล้ว');
+  _localChanged=Date.now(); saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); toast('🗑️ ลบแล้ว');
 }
 
 // ============================================================
@@ -1929,6 +1971,7 @@ function saveHol() {
   if (idx >= 0) S.holidays[idx] = { dt: dt, name: nm };
   else S.holidays.push({ dt: dt, name: nm });
   S.holidays.sort(function(a, b) { return a.dt.localeCompare(b.dt); });
+  _localChanged=Date.now();
   saveLS();
   syncSheet('Holidays', S.holidays);
   // Guard: ensure schedules not lost
@@ -1947,6 +1990,7 @@ function clrHol() {
 function delHol(dt) {
   if (!confirm('ลบวันหยุดนี้?')) return;
   S.holidays = S.holidays.filter(function(h) { return h.dt !== dt; });
+  _localChanged=Date.now();
   saveLS();
   syncSheet('Holidays', S.holidays);
   renderHolTbl(); renderCal(); renderWeek();
@@ -1983,6 +2027,51 @@ function debugData() {
     msg += h.dt + ': ' + h.name + '\n';
   });
   alert(msg);
+}
+
+
+// ── Top Types (ประเภทงาน) ─────────────────────────────────────
+function saveTopType() {
+  var nm = document.getElementById('tt_nm').value.trim();
+  if (!nm) { toast('\u26a0\ufe0f \u0e01\u0e23\u0e38\u0e13\u0e32\u0e23\u0e30\u0e1a\u0e38\u0e0a\u0e37\u0e48\u0e2d\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17'); return; }
+  if (S.topTypes.indexOf(nm) >= 0) { toast('\u26a0\ufe0f \u0e21\u0e35\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e19\u0e35\u0e49\u0e41\u0e25\u0e49\u0e27'); return; }
+  S.topTypes.push(nm);
+  S.topTypes.sort();
+  saveLS();
+  document.getElementById('tt_nm').value = '';
+  renderTopTypeList();
+  renderTopTypeSelect();
+  toast('\u2705 \u0e40\u0e1e\u0e34\u0e48\u0e21\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e07\u0e32\u0e19\u0e41\u0e25\u0e49\u0e27');
+}
+function delTopType(nm) {
+  if (!confirm('\u0e25\u0e1a\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17 "' + nm + '"?')) return;
+  S.topTypes = S.topTypes.filter(function(t){ return t !== nm; });
+  saveLS();
+  renderTopTypeList();
+  renderTopTypeSelect();
+  toast('\u0e25\u0e1a\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e41\u0e25\u0e49\u0e27');
+}
+function renderTopTypeList() {
+  var el = document.getElementById('topTypeList');
+  if (!el) return;
+  el.innerHTML = S.topTypes.map(function(t) {
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--lav-pale);color:var(--lav);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500">'
+      + t + '<button onclick="delTopType(\'' + t + '\')" style="border:none;background:none;cursor:pointer;color:var(--lav);font-size:13px;line-height:1">×</button></span>';
+  }).join('');
+}
+function renderTopTypeSelect() {
+  var sel = document.getElementById('t_type');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">-- \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e07\u0e32\u0e19 --</option>'
+    + S.topTypes.map(function(t){ return '<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>'; }).join('');
+}
+
+// ── Search helpers ──────────────────────────────────────────
+function initSearch(inputId, renderFn) {
+  var el = document.getElementById(inputId);
+  if (!el) return;
+  el.addEventListener('input', function(){ renderFn(this.value); });
 }
 
 </script>
