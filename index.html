@@ -438,7 +438,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
         <div class="ff"><label class="flbl">ตำแหน่ง</label><input class="finp" id="i_pos" placeholder="เช่น เภสัชกรชำนาญการ"></div>
         <div class="ff"><label class="flbl">เบอร์โทร</label><input class="finp" id="i_ph" placeholder="0XX-XXX-XXXX"></div>
         <div class="ff"><label class="flbl">Line ID</label><input class="finp" id="i_li" placeholder="Line ID"></div>
-        <div class="ff full"><label class="flbl">หัวข้องานที่รับผิดชอบ (เลือกได้หลายข้อ)</label><div class="msbox" id="i_topbox"></div></div>
+        <div class="ff full"><label class="flbl">หัวข้องานที่รับผิดชอบ (เลือกได้หลายข้อ)</label><input class="finp" id="srch_ins_top" placeholder="🔍 ค้นหัวข้อ..." oninput="filterMSBox('i_topbox',this.value)" style="margin-bottom:6px;font-size:12px"><div class="msbox" id="i_topbox"></div></div>
       </div>
       <div class="bgrp"><button class="btn btn-p" onclick="saveInst()">💾 บันทึก</button><button class="btn btn-o" onclick="clrInst()">🔄 ล้าง</button></div>
     </div></div>
@@ -473,7 +473,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
         <div class="ff full">
           <div id="sc_dur_label" style="font-size:12px;color:var(--sky);font-weight:600;padding:4px 0;min-height:20px"></div>
         </div>
-        <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><select class="fsel" id="sc_top"></select></div>
+        <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><input class="finp" id="srch_sc_top" placeholder="🔍 ค้นหัวข้อ..." oninput="filterSelect('sc_top',this.value)" style="margin-bottom:4px;font-size:12px"><select class="fsel" id="sc_top"></select></div>
         <div class="ff full"><label class="flbl">อาจารย์ (หลายคน)</label><div class="msbox" id="sc_insbox"></div></div>
       </div>
       <div class="bgrp"><button class="btn btn-p" onclick="saveSch()">💾 บันทึก</button><button class="btn btn-o" onclick="clrSch()">🔄 ล้าง</button></div>
@@ -497,7 +497,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--txt);m
     <div class="cb">
       <div class="fgrid">
         <div class="ff full"><label class="flbl">เลือกนักศึกษา (หลายคน) <span class="req">*</span></label><div class="msbox" id="as_stubox"></div></div>
-        <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><select class="fsel" id="as_top"></select></div>
+        <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><input class="finp" id="srch_as_top" placeholder="🔍 ค้นหัวข้อ..." oninput="filterSelect('as_top',this.value)" style="margin-bottom:4px;font-size:12px"><select class="fsel" id="as_top"></select></div>
         <div class="ff full"><label class="flbl">อาจารย์ผู้มอบหมาย (หลายคน)</label><div class="msbox" id="as_insbox"></div></div>
         <div class="ff full"><label class="flbl">รายละเอียด <span class="req">*</span></label><textarea class="fta" id="as_det" placeholder="อธิบายงานที่มอบหมาย..." style="min-height:100px"></textarea></div>
         <div class="ff"><label class="flbl">กำหนดส่ง <span class="req">*</span></label><input class="finp" id="as_due" type="date"></div>
@@ -1294,21 +1294,30 @@ function buildMS(boxId, items, cbClass, valKey, lblFn) {
 function buildMSBoxes() {}
 
 function buildTopBoxForIns() {
-  buildMS('i_topbox', S.topics, 'i_tpcb', 'id', function(t){return t.nm;});
+  var sorted=S.topics.slice().sort(function(a,b){return(a.type||'').localeCompare(b.type||'')||(a.nm||'').localeCompare(b.nm||'');});
+  buildMS('i_topbox', sorted, 'i_tpcb', 'id', function(t){
+    return t.type?'<span style="color:var(--lav);font-size:10px;margin-right:4px">['+t.type+']</span>'+t.nm:t.nm;
+  });
 }
 
 function buildSchDrops() {
   buildMS('sc_stubox', S.students, 'sc_stucb', 'id', function(s){return s.pfx+s.fn+' '+s.ln+' ('+s.nick+')';});
   buildMS('sc_insbox', S.instructors, 'sc_inscb', 'id', function(i){return i.pfx+i.fn+' '+i.ln;});
   var sel=document.getElementById('sc_top');
-  if(sel) sel.innerHTML=S.topics.map(function(t){return '<option value="'+t.id+'">'+t.nm+'</option>';}).join('');
+  var sortedT=S.topics.slice().sort(function(a,b){return(a.type||'').localeCompare(b.type||'')||(a.nm||'').localeCompare(b.nm||'');});
+  if(sel) sel.innerHTML='<option value="">— เลือกหัวข้อ —</option>'
+    +sortedT.map(function(t){
+      var label=t.type?'['+t.type+'] '+t.nm:t.nm;
+      return '<option value="'+t.id+'">'+label+'</option>';
+    }).join('');
 }
 
 function buildAsgnDrops() {
   buildMS('as_stubox', S.students, 'as_stucb', 'id', function(s){return s.pfx+s.fn+' '+s.ln+' ('+s.nick+')';});
   buildMS('as_insbox', S.instructors, 'as_inscb', 'id', function(i){return i.pfx+i.fn+' '+i.ln;});
   var sel=document.getElementById('as_top');
-  if(sel) sel.innerHTML=S.topics.map(function(t){return '<option value="'+t.id+'">'+t.nm+'</option>';}).join('');
+  if(sel) sel.innerHTML=S.topics.map(function(t){var label=t.type?'['+t.type+'] '+t.nm:t.nm;
+      return '<option value="'+t.id+'">'+label+'</option>';}).join('');
 }
 
 function getChecked(cls) {
@@ -2064,6 +2073,43 @@ function initSearch(inputId, renderFn) {
   var el = document.getElementById(inputId);
   if (!el) return;
   el.addEventListener('input', function(){ renderFn(this.value); });
+}
+
+
+// ── Search/filter helpers ────────────────────────────────────
+// Filter checkbox msbox items
+function filterMSBox(boxId, q) {
+  var box = document.getElementById(boxId);
+  if (!box) return;
+  var labels = box.querySelectorAll('label.msi');
+  q = (q || '').toLowerCase();
+  labels.forEach(function(lbl) {
+    var txt = lbl.textContent.toLowerCase();
+    lbl.style.display = (!q || txt.includes(q)) ? '' : 'none';
+  });
+}
+
+// Filter select dropdown options
+function filterSelect(selId, q) {
+  var sel = document.getElementById(selId);
+  if (!sel) return;
+  q = (q || '').toLowerCase();
+  var opts = sel.querySelectorAll('option');
+  var firstMatch = null;
+  opts.forEach(function(opt) {
+    if (!opt.value) return; // keep placeholder
+    var match = !q || opt.textContent.toLowerCase().includes(q);
+    opt.style.display = match ? '' : 'none';
+    if (match && !firstMatch) firstMatch = opt;
+  });
+  // Auto-select first match when typing
+  if (q && firstMatch) sel.value = firstMatch.value;
+}
+
+// Clear search fields in forms
+function clrTopSearch(prefix) {
+  var s = document.getElementById('srch_' + prefix + '_top');
+  if (s) { s.value = ''; filterSelect(prefix + '_top', ''); }
 }
 
 </script>
