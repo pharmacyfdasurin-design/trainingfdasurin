@@ -600,7 +600,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 // CONFIG
 // ============================================================
 var SHEET_ID = '17vD8KfzfEWSFTy2NjxzzPknHUCs_pW8qI_tiBeZG3m4';
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyCQayE-Jq616x2Yc9jl_a43IJBVLXz-dkYKU0fAY3I63SUNZVDX8bt3imhHEIKdRLGzg/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwwOeSvm594AB8-zDMrr2R18_a2qmAY--S1D97enSZQrcrPH0HQpC-AteiwdLZaEUIzBA/exec';
 var ADMIN_PW = 'fdasurin12345';
 
 // ============================================================
@@ -758,24 +758,27 @@ function gasReadAll(done) {
 
 function gasWriteSheet(sheetName, rows, done) {
   if (!GAS_URL) { if (done) done(false); return; }
-  // Use text/plain to avoid CORS preflight (GAS doesn't handle OPTIONS)
-  var payload = JSON.stringify({ action: 'writeSheet', sheet: sheetName, rows: rows });
-  fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: payload
-  })
-  .then(function(r) { return r.text(); })
-  .then(function(txt) {
-    try {
-      var d = JSON.parse(txt);
-      if (done) done(d && d.success === true);
-    } catch(e) { if (done) done(true); } // optimistic if parse fails
-  })
-  .catch(function(err) {
-    console.warn('POST failed:', err);
-    if (done) done(false);
-  });
+
+  // Step 1: clear the sheet via GET (no CORS issue)
+  var clearUrl = GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName);
+  fetch(clearUrl)
+    .then(function() {
+      if (!rows || rows.length === 0) { if (done) done(true); return; }
+      // Step 2: write each row via GET (small URL, no CORS issue)
+      var i = 0;
+      function nextRow() {
+        if (i >= rows.length) { if (done) done(true); return; }
+        var row = rows[i++];
+        var rowUrl = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
+          + '&row=' + encodeURIComponent(JSON.stringify(row));
+        fetch(rowUrl).then(nextRow).catch(nextRow);
+      }
+      nextRow();
+    })
+    .catch(function(err) {
+      console.warn('gasWriteSheet error:', err);
+      if (done) done(false);
+    });
 }
 
 function pullFromGAS(callback, silent) {
