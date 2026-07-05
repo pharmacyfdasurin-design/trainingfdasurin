@@ -1086,10 +1086,10 @@ function refreshDash() {
       +'</div></div>';
   }).join('') : '<div style="text-align:center;color:var(--txt3);padding:30px">ไม่มีนักศึกษาที่กำลังฝึกงาน ณ วันนี้</div>';
 
-  var todaySchs = S.schedules.filter(function(s){return s.dt===ts;})
+  var todaySchs = S.schedules.filter(function(s){return dstr(new Date(s.dt||''))===ts;})
     .sort(function(a,b){return (a.tm||'').localeCompare(b.tm||'');});
   var tmrStr = dstr(new Date(today.getTime()+86400000));
-  var tmrSchs = S.schedules.filter(function(s){return s.dt===tmrStr;})
+  var tmrSchs = S.schedules.filter(function(s){return dstr(new Date(s.dt||''))===tmrStr;})
     .sort(function(a,b){return a.tm.localeCompare(b.tm);});
 
   var ahtml='';
@@ -1137,7 +1137,7 @@ function renderCal() {
     else html+='<div class="cal-date">'+day+'</div>';
     if(hol) html+='<div class="hol-lbl">'+hol+'</div>';
     if(dow&&dow<6){
-      var evs=S.schedules.filter(function(s){return s.dt===ds;})
+      var evs=S.schedules.filter(function(s){return dstr(new Date(s.dt||''))===ds;})
         .sort(function(a,b){return (a.tm||'').localeCompare(b.tm||'');});
       evs.forEach(function(ev,ei){
         var tn=topName(ev.topId);
@@ -1175,7 +1175,8 @@ function renderWeek(){
   var dayEvs={};
   days.forEach(function(d){ dayEvs[dstr(d)]=[]; });
   S.schedules.forEach(function(sc){
-    if(dayEvs[sc.dt]!==undefined) dayEvs[sc.dt].push(sc);
+    var scDate = dstr(new Date(sc.dt||''));
+    if(dayEvs[scDate]!==undefined) dayEvs[scDate].push(sc);
   });
   days.forEach(function(d){
     dayEvs[dstr(d)].sort(function(a,b){
