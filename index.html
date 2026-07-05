@@ -76,7 +76,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 /* CALENDAR */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-hc{text-align:center;font-size:11px;font-weight:700;color:var(--txt2);padding:6px 0}
-.cal-cell{min-height:90px;background:#fff;border-radius:var(--rs);padding:6px;border:1px solid #EDE9E0;font-size:11px}
+.cal-cell{min-height:95px;background:#fff;border-radius:var(--rs);padding:7px;border:1px solid #DDE8E3;font-size:11.5px;transition:background .15s}
 .cal-cell.wknd,.cal-cell.hol{background:#F2F2F2}
 .cal-cell.today{border:2px solid var(--sky);background:var(--sky-pale)}
 .cal-date{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:3px}
@@ -476,7 +476,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
           <div id="sc_dur_label" style="font-size:12px;color:var(--sky);font-weight:600;padding:4px 0;min-height:20px"></div>
         </div>
         <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><input class="finp" id="srch_sc_top" placeholder="🔍 ค้นหัวข้อ..." oninput="filterSelect('sc_top',this.value)" style="margin-bottom:4px;font-size:12px"><select class="fsel" id="sc_top"></select></div>
-        <div class="ff full"><label class="flbl">อาจารย์ (หลายคน)</label><div class="msbox" id="sc_insbox"></div></div>
+        <div class="ff full"><label class="flbl">อาจารย์ (หลายคน)</label><input class="finp" id="srch_sc_ins" placeholder="🔍 ค้นชื่ออาจารย์..." oninput="filterMSBox('sc_insbox',this.value)" style="margin-bottom:6px;font-size:12px"><div class="msbox" id="sc_insbox"></div></div>
       </div>
       <div class="bgrp"><button class="btn btn-p" onclick="saveSch()">💾 บันทึก</button><button class="btn btn-o" onclick="clrSch()">🔄 ล้าง</button></div>
     </div></div>
@@ -500,7 +500,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
       <div class="fgrid">
         <div class="ff full"><label class="flbl">เลือกนักศึกษา (หลายคน) <span class="req">*</span></label><div class="msbox" id="as_stubox"></div></div>
         <div class="ff full"><label class="flbl">หัวข้อ <span class="req">*</span></label><input class="finp" id="srch_as_top" placeholder="🔍 ค้นหัวข้อ..." oninput="filterSelect('as_top',this.value)" style="margin-bottom:4px;font-size:12px"><select class="fsel" id="as_top"></select></div>
-        <div class="ff full"><label class="flbl">อาจารย์ผู้มอบหมาย (หลายคน)</label><div class="msbox" id="as_insbox"></div></div>
+        <div class="ff full"><label class="flbl">อาจารย์ผู้มอบหมาย (หลายคน)</label><input class="finp" id="srch_as_ins" placeholder="🔍 ค้นชื่ออาจารย์..." oninput="filterMSBox('as_insbox',this.value)" style="margin-bottom:6px;font-size:12px"><div class="msbox" id="as_insbox"></div></div>
         <div class="ff full"><label class="flbl">รายละเอียด <span class="req">*</span></label><textarea class="fta" id="as_det" placeholder="อธิบายงานที่มอบหมาย..." style="min-height:100px"></textarea></div>
         <div class="ff"><label class="flbl">กำหนดส่ง <span class="req">*</span></label><input class="finp" id="as_due" type="date"></div>
       </div>
@@ -600,7 +600,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 // CONFIG
 // ============================================================
 var SHEET_ID = '17vD8KfzfEWSFTy2NjxzzPknHUCs_pW8qI_tiBeZG3m4';
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwwOeSvm594AB8-zDMrr2R18_a2qmAY--S1D97enSZQrcrPH0HQpC-AteiwdLZaEUIzBA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxbqYB9aH42jCF9Bu1WdzcpNhzeWsilteeRBOd1hlcQZTOUsj4LAhJU0c3Edgxbbkzfhw/exec';
 var ADMIN_PW = 'fdasurin12345';
 
 // ============================================================
@@ -758,20 +758,24 @@ function gasReadAll(done) {
 
 function gasWriteSheet(sheetName, rows, done) {
   if (!GAS_URL) { if (done) done(false); return; }
+  if (!rows) rows = [];
 
-  // Step 1: clear the sheet via GET (no CORS issue)
+  // Step 1: clear only THIS sheet
   var clearUrl = GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName);
   fetch(clearUrl)
+    .then(function(r) { return r.json(); })
     .then(function() {
-      if (!rows || rows.length === 0) { if (done) done(true); return; }
-      // Step 2: write each row via GET (small URL, no CORS issue)
+      if (rows.length === 0) { if (done) done(true); return; }
+      // Step 2: write each row sequentially
       var i = 0;
       function nextRow() {
         if (i >= rows.length) { if (done) done(true); return; }
         var row = rows[i++];
         var rowUrl = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
           + '&row=' + encodeURIComponent(JSON.stringify(row));
-        fetch(rowUrl).then(nextRow).catch(nextRow);
+        fetch(rowUrl)
+          .then(function() { setTimeout(nextRow, 50); })
+          .catch(function() { setTimeout(nextRow, 100); });
       }
       nextRow();
     })
@@ -1133,13 +1137,14 @@ function renderCal() {
     else html+='<div class="cal-date">'+day+'</div>';
     if(hol) html+='<div class="hol-lbl">'+hol+'</div>';
     if(dow&&dow<6){
-      var evs=S.schedules.filter(function(s){return s.dt===ds;});
-      evs.slice(0,3).forEach(function(ev,ei){
+      var evs=S.schedules.filter(function(s){return s.dt===ds;})
+        .sort(function(a,b){return (a.tm||'').localeCompare(b.tm||'');});
+      evs.forEach(function(ev,ei){
         var tn=topName(ev.topId);
-        var sn=tn.length>28?tn.slice(0,26)+'…':tn;
+        var tm=ev.tm?ev.tm.split('-')[0]+' ':'';
+        var sn=(tm+tn).length>28?(tm+tn).slice(0,26)+'…':tm+tn;
         html+='<div class="cal-ev"><div class="cal-bul" style="background:'+evColors[ei%4]+'"></div><div class="cal-evt">'+sn+'</div></div>';
       });
-      if(evs.length>3) html+='<div style="font-size:9px;color:var(--sky)">+'+( evs.length-3)+' อื่นๆ</div>';
     }
     cell.innerHTML=html;
     grid.appendChild(cell);
@@ -1836,7 +1841,10 @@ function buildPDFHTML(stuId){
     var tmDisplay = sc.tm ? sc.tm.replace('-',' \u2013 ') + (dur?' ('+dur+')':'') : '-';
 
     var tn = topName(sc.topId);
-    var ins = sc.insIds.map(insName).join(', ');
+    var ins = sc.insIds.map(function(id){
+      var inst = S.instructors.find(function(x){return Number(x.id)===Number(id);});
+      return inst ? (inst.pfx + inst.fn) : '-';
+    }).join(', ');
     var holName = isHol(sc.dt);
 
     var rowBg = holName ? 'background:#F5F5F5;color:#999' : bg;
@@ -1915,7 +1923,7 @@ function printPDF(){
     + '<style>'
     + '@page{size:A4;margin:0}'
     + 'body{margin:0;padding:0;font-family:"TH Sarabun New","Sarabun",sans-serif}'
-    + '#pdfDoc{width:794px;padding:28px 32px;box-sizing:border-box}'
+    + '#pdfDoc{width:794px;padding:28px 32px;box-sizing:border-box;font-size:16pt;color:#000}'
     + 'table{width:100%;border-collapse:collapse;font-size:11.5px}'
     + 'th{background:#1E6478;color:#fff;padding:6px 5px;text-align:left}'
     + 'td{padding:5px;border-bottom:1px solid #E0E0E0;vertical-align:top}'
@@ -2072,6 +2080,53 @@ function filterSelect(selId, q) {
 function clrTopSearch(prefix) {
   var s = document.getElementById('srch_' + prefix + '_top');
   if (s) { s.value = ''; filterSelect(prefix + '_top', ''); }
+}
+
+
+// Auto-pull when window regains focus (user switches tabs/computers)
+window.addEventListener('focus', function() {
+  if (GAS_URL && !_focusPullThrottle) {
+    _focusPullThrottle = true;
+    setTimeout(function() { _focusPullThrottle = false; }, 30000); // max once per 30s
+    pullFromGAS(null, true); // silent pull
+  }
+});
+var _focusPullThrottle = false;
+
+
+// Pull latest from GAS before saving to ensure we have current data
+function pullThenSave(sheetName, getRows, afterSave) {
+  if (!GAS_URL) {
+    // No GAS - just save locally
+    gasWriteSheet(sheetName, getRows(), afterSave);
+    return;
+  }
+  // Pull current sheet data from GAS first
+  fetch(GAS_URL + '?action=readAll')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.success) {
+        // Merge: update S with GAS data for OTHER sheets only
+        // Don't overwrite the sheet we're about to save
+        var sheets = ['students','topics','instructors','schedules','assignments','holidays'];
+        sheets.forEach(function(k) {
+          if (k !== sheetName.toLowerCase() && d[k] !== undefined) {
+            var key = k === 'students' ? 'students'
+              : k === 'topics' ? 'topics'
+              : k === 'instructors' ? 'instructors'
+              : k === 'schedules' ? 'schedules'
+              : k === 'assignments' ? 'assignments'
+              : k === 'holidays' ? 'holidays' : null;
+            if (key && S[key] !== undefined) S[key] = normId(d[k] || []);
+          }
+        });
+        saveLS();
+      }
+    })
+    .catch(function() {}) // ignore pull errors, proceed with save
+    .finally(function() {
+      gasWriteSheet(sheetName, getRows(), afterSave);
+    });
 }
 
 </script>
