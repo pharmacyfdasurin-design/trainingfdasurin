@@ -600,7 +600,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 // CONFIG
 // ============================================================
 var SHEET_ID = '17vD8KfzfEWSFTy2NjxzzPknHUCs_pW8qI_tiBeZG3m4';
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxbqYB9aH42jCF9Bu1WdzcpNhzeWsilteeRBOd1hlcQZTOUsj4LAhJU0c3Edgxbbkzfhw/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxHzEP8zHv2hFhzLvSCPe-4eCnsgOvqi6kDjaY8fNin7Y79UYdH6WixwvMAmUhh_dKEqg/exec';
 var ADMIN_PW = 'fdasurin12345';
 
 // ============================================================
@@ -760,30 +760,53 @@ function gasWriteSheet(sheetName, rows, done) {
   if (!GAS_URL) { if (done) done(false); return; }
   if (!rows) rows = [];
 
-  // Step 1: clear sheet
-  fetch(GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName))
+  // Send all rows in ONE request via GET (atomic - no partial writes)
+  var url = GAS_URL
+    + '?action=writeSheet'
+    + '&sheet=' + encodeURIComponent(sheetName)
+    + '&rows=' + encodeURIComponent(JSON.stringify(rows));
+
+  // If URL too long (>6000 chars), split into clearSheet + parallel writeRow
+  if (url.length > 6000) {
+    _gasWriteChunked(sheetName, rows, done);
+    return;
+  }
+
+  fetch(url)
     .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (done) done(d && d.success === true);
+    })
+    .catch(function() {
+      // Fallback to chunked
+      _gasWriteChunked(sheetName, rows, done);
+    });
+}
+
+function _gasWriteChunked(sheetName, rows, done) {
+  // Step 1: clear
+  fetch(GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName))
     .then(function() {
       if (rows.length === 0) { if (done) done(true); return; }
-      // Step 2: send ALL rows in parallel for speed
-      var promises = rows.map(function(row) {
-        var url = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
-          + '&row=' + encodeURIComponent(JSON.stringify(row));
-        return fetch(url).catch(function() {
-          // retry once on failure
-          return fetch(url).catch(function() { return null; });
+      // Step 2: write rows in small batches (5 at a time) to avoid throttling
+      var batchSize = 5;
+      var i = 0;
+      function nextBatch() {
+        if (i >= rows.length) { if (done) done(true); return; }
+        var batch = rows.slice(i, i + batchSize);
+        i += batchSize;
+        var promises = batch.map(function(row) {
+          var rowUrl = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
+            + '&row=' + encodeURIComponent(JSON.stringify(row));
+          return fetch(rowUrl).catch(function() { return fetch(rowUrl); });
         });
-      });
-      Promise.all(promises).then(function() {
-        if (done) done(true);
-      }).catch(function() {
-        if (done) done(true); // optimistic
-      });
+        Promise.all(promises).then(function() {
+          setTimeout(nextBatch, 200); // 200ms gap between batches
+        });
+      }
+      nextBatch();
     })
-    .catch(function(err) {
-      console.warn('gasWriteSheet error:', err);
-      if (done) done(false);
-    });
+    .catch(function() { if (done) done(false); });
 }
 
 function pullFromGAS(callback, silent) {
