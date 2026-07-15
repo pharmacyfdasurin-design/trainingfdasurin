@@ -403,7 +403,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
       </div>
     </div>
     <!-- Topic Registration -->
-    <div class="card"><div class="ch"><span>📚</span><div class="ch-t">ลงทะเบียนหัวข้อ</div></div>
+    <div class="card"><div class="ch"><span>📚]</span><div class="ch-t">ลงทะเบียนหัวข้อ</div></div>
     <div class="cb">
       <div class="fgrid">
         <div class="ff"><label class="flbl">ประเภทงาน <span class="req">*</span></label>
@@ -430,7 +430,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
     <button class="tab-btn" onclick="swTab(this,'ifTbl')">📋 รายชื่อ</button>
   </div>
   <div id="ifForm">
-    <div class="card"><div class="ch"><span>👩‍⚕️</span><div class="ch-t">ลงทะเบียนอาจารย์แหล่งฝึก</div></div>
+    <div class="card"><div class="ch"><span>👩‍⚕️]</span><div class="ch-t">ลงทะเบียนอาจารย์แหล่งฝึก</div></div>
     <div class="cb">
       <div class="fgrid">
         <div class="ff"><label class="flbl">คำนำหน้า <span class="req">*</span></label><select class="fsel" id="i_pfx"><option>ภก.</option><option selected>ภญ.</option><option>นาย</option><option>นาง</option><option>นางสาว</option></select></div>
@@ -760,24 +760,25 @@ function gasWriteSheet(sheetName, rows, done) {
   if (!GAS_URL) { if (done) done(false); return; }
   if (!rows) rows = [];
 
-  // Step 1: clear only THIS sheet
-  var clearUrl = GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName);
-  fetch(clearUrl)
+  // Step 1: clear sheet
+  fetch(GAS_URL + '?action=clearSheet&sheet=' + encodeURIComponent(sheetName))
     .then(function(r) { return r.json(); })
     .then(function() {
       if (rows.length === 0) { if (done) done(true); return; }
-      // Step 2: write each row sequentially
-      var i = 0;
-      function nextRow() {
-        if (i >= rows.length) { if (done) done(true); return; }
-        var row = rows[i++];
-        var rowUrl = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
+      // Step 2: send ALL rows in parallel for speed
+      var promises = rows.map(function(row) {
+        var url = GAS_URL + '?action=writeRow&sheet=' + encodeURIComponent(sheetName)
           + '&row=' + encodeURIComponent(JSON.stringify(row));
-        fetch(rowUrl)
-          .then(function() { setTimeout(nextRow, 50); })
-          .catch(function() { setTimeout(nextRow, 100); });
-      }
-      nextRow();
+        return fetch(url).catch(function() {
+          // retry once on failure
+          return fetch(url).catch(function() { return null; });
+        });
+      });
+      Promise.all(promises).then(function() {
+        if (done) done(true);
+      }).catch(function() {
+        if (done) done(true); // optimistic
+      });
     })
     .catch(function(err) {
       console.warn('gasWriteSheet error:', err);
@@ -1096,14 +1097,14 @@ function refreshDash() {
   if (todaySchs.length) {
     var ns=todaySchs[0];
     var instr=ns.insIds.map(insName).join(', ');
-    ahtml+='<div class="alert-box next"><span class="al-ico">🔔</span><div>'
-      +'<div class="al-t">📍 วันนี้ — '+ns.tm+'</div>'
+    ahtml+='<div class="alert-box next"><span class="al-ico">[alert]</span><div>'
+      +'<div class="al-t">[pin] วันนี้ — '+ns.tm+'</div>'
       +'<div class="al-d"><b>'+topName(ns.topId)+'</b>'+(instr?' | '+instr:'')+'</div>'
       +'</div></div>';
   }
   if (tmrSchs.length) {
-    ahtml+='<div class="alert-box tmr"><span class="al-ico">📅</span><div>'
-      +'<div class="al-t">📌 พรุ่งนี้ ('+fmtS(tmrStr)+') — '+tmrSchs.length+' รายการ</div>'
+    ahtml+='<div class="alert-box tmr"><span class="al-ico">[cal]</span><div>'
+      +'<div class="al-t">[note] พรุ่งนี้ ('+fmtS(tmrStr)+') — '+tmrSchs.length+' รายการ</div>'
       +'<div class="al-d">'+tmrSchs.map(function(sc){return sc.tm+' — '+topName(sc.topId);}).join('<br>')+'</div>'
       +'</div></div>';
   }
@@ -1145,6 +1146,13 @@ function renderCal() {
         var sn=(tm+tn).length>28?(tm+tn).slice(0,26)+'…':tm+tn;
         html+='<div class="cal-ev"><div class="cal-bul" style="background:'+evColors[ei%4]+'"></div><div class="cal-evt">'+sn+'</div></div>';
       });
+    }
+    // Add click handler if there are events
+    var hasSch = S.schedules.some(function(s){ return dstr(new Date(s.dt||''))===ds; });
+    if (hasSch) {
+      cell.style.cursor = 'pointer';
+      cell.title = 'คลิกดูรายละเอียด';
+      (function(capturedDs){ cell.onclick = function(){ openDayModal(capturedDs); }; })(ds);
     }
     cell.innerHTML=html;
     grid.appendChild(cell);
@@ -1343,7 +1351,7 @@ function renderStuTbl(q){
       +'<td style="white-space:nowrap">'+fmtS(s.st)+' – '+fmtS(s.en)+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editStu('+s.id+')">✏️</button>'
-      +'<button class="ibtn ibtn-d" onclick="delStu('+s.id+')">🗑️</button>'
+      +'<button class="ibtn ibtn-d" onclick="delStu('+s.id+')">[del]</button>'
       +'</div></td></tr>';
   }).join('');
 }
@@ -1362,7 +1370,7 @@ function editStu(id){
 function delStu(id){
   if(!confirm('ลบข้อมูลนักศึกษา?')) return;
   S.students=S.students.filter(function(s){return Number(s.id)!==Number(id);});
-  saveLS(); syncSheet('Students', S.students); renderStuTbl(); refreshDash(); toast('🗑️ ลบแล้ว');
+  saveLS(); syncSheet('Students', S.students); renderStuTbl(); refreshDash(); toast('[del] ลบแล้ว');
 }
 
 // ============================================================
@@ -1395,7 +1403,7 @@ function renderTopTbl(q){
       +'<td style="font-size:11px;color:var(--txt2)">'+(t.ds||'-')+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editTop('+t.id+')">✏️</button>'
-      +'<button class="ibtn ibtn-d" onclick="delTop('+t.id+')">🗑️</button>'
+      +'<button class="ibtn ibtn-d" onclick="delTop('+t.id+')">[del]</button>'
       +'</div></td></tr>';
   }).join('');
 }
@@ -1413,7 +1421,7 @@ function editTop(id){
 function delTop(id){
   if(!confirm('ลบหัวข้อ?')) return;
   S.topics=S.topics.filter(function(t){return Number(t.id)!==Number(id);});
-  saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); toast('🗑️ ลบแล้ว');
+  saveLS(); syncSheet('Topics', S.topics); renderTopTbl(); toast('[del] ลบแล้ว');
 }
 
 // ============================================================
@@ -1465,7 +1473,7 @@ function renderInsTbl(q){
       +'<td>'+(ins.ph||'-')+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editIns('+ins.id+')">✏️</button>'
-      +'<button class="ibtn ibtn-d" onclick="delIns('+ins.id+')">🗑️</button>'
+      +'<button class="ibtn ibtn-d" onclick="delIns('+ins.id+')">[del]</button>'
       +'</div></td></tr>';
   }).join('');
 }
@@ -1483,7 +1491,7 @@ function editIns(id){
 function delIns(id){
   if(!confirm('ลบอาจารย์?')) return;
   S.instructors=S.instructors.filter(function(i){return Number(i.id)!==Number(id);});
-  saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); toast('🗑️ ลบแล้ว');
+  saveLS(); syncSheet('Instructors', S.instructors); renderInsTbl(); toast('[del] ลบแล้ว');
 }
 
 // ============================================================
@@ -1533,7 +1541,7 @@ function renderSchTbl(q){
       +'<td style="font-size:11px">'+(stuN||'-')+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editSch('+sc.id+')">✏️</button>'
-      +'<button class="ibtn ibtn-d" onclick="delSch('+sc.id+')">🗑️</button>'
+      +'<button class="ibtn ibtn-d" onclick="delSch('+sc.id+')">[del]</button>'
       +'</div></td></tr>';
   }).join('');
 }
@@ -1553,7 +1561,7 @@ function editSch(id){
 function delSch(id){
   if(!confirm('ลบรายการ?')) return;
   S.schedules=S.schedules.filter(function(s){return Number(s.id)!==Number(id);});
-  saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); renderCal(); renderWeek(); toast('🗑️ ลบแล้ว');
+  saveLS(); syncSheet('Schedules', S.schedules); renderSchTbl(); renderCal(); renderWeek(); toast('[del] ลบแล้ว');
 }
 
 // ============================================================
@@ -1596,7 +1604,7 @@ function renderAsgnTbl(){
       +'<td style="white-space:nowrap">'+fmtD(a.due)+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editAsgn('+a.id+')">✏️</button>'
-      +'<button class="ibtn ibtn-d" onclick="delAsgn('+a.id+')">🗑️</button>'
+      +'<button class="ibtn ibtn-d" onclick="delAsgn('+a.id+')">[del]</button>'
       +'</div></td></tr>';
   }).join('');
 }
@@ -1616,7 +1624,7 @@ function editAsgn(id){
 function delAsgn(id){
   if(!confirm('ลบงาน?')) return;
   S.assignments=S.assignments.filter(function(a){return Number(a.id)!==Number(id);});
-  saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); toast('🗑️ ลบแล้ว');
+  saveLS(); syncSheet('Assignments', S.assignments); renderAsgnTbl(); toast('[del] ลบแล้ว');
 }
 
 // ============================================================
@@ -1905,7 +1913,7 @@ function downloadPDF(){
     + '</head><body>'
     + '<div id="pdfDoc">' + docEl.innerHTML + '</div>'
     + '<script>window.onload=function(){window.print();}<\/script>'
-    + '</body></html>';
+    + '\n</body></html>';
 
   var blob = new Blob([fullHtml], {type:'text/html;charset=utf-8'});
   var url = URL.createObjectURL(blob);
@@ -2124,12 +2132,105 @@ function pullThenSave(sheetName, getRows, afterSave) {
         saveLS();
       }
     })
-    .catch(function() {}) // ignore pull errors, proceed with save
-    .finally(function() {
-      gasWriteSheet(sheetName, getRows(), afterSave);
-    });
+    .then(function() { gasWriteSheet(sheetName, getRows(), afterSave); })
+    .catch(function() { gasWriteSheet(sheetName, getRows(), afterSave); }); // proceed regardless
 }
 
+
+// ── Calendar Day Detail Modal ────────────────────────────────
+function openDayModal(ds) {
+  var evs = S.schedules
+    .filter(function(s){ return dstr(new Date(s.dt||'')) === ds; })
+    .sort(function(a,b){ return (a.tm||'').localeCompare(b.tm||''); });
+  if (!evs.length) return;
+
+  var d = new Date(ds + 'T12:00:00');
+  var dayNames = ['\u0e2d\u0e32\u0e17\u0e34\u0e15\u0e22\u0e4c','\u0e08\u0e31\u0e19\u0e17\u0e23\u0e4c','\u0e2d\u0e31\u0e07\u0e04\u0e32\u0e23','\u0e1e\u0e38\u0e18','\u0e1e\u0e24\u0e2b\u0e31\u0e2a\u0e1a\u0e14\u0e35','\u0e28\u0e38\u0e01\u0e23\u0e4c','\u0e40\u0e2a\u0e32\u0e23\u0e4c'];
+  var hol = isHol(ds);
+  var dateStr = '\u0e27\u0e31\u0e19' + dayNames[d.getDay()] + '\u0e17\u0e35\u0e48 '
+    + d.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+
+  document.getElementById('calDayTitle').textContent = dateStr + (hol ? ' \u2014 ' + hol : '');
+  document.getElementById('calDayCount').textContent =
+    evs.length + ' \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e1d\u0e36\u0e01\u0e1b\u0e0f\u0e34\u0e1a\u0e31\u0e15\u0e34\u0e07\u0e32\u0e19';
+
+  var evColors = ['#3A8F72','#6B7FBE','#C8973A','#5BAFD6'];
+  var html = evs.map(function(sc, idx) {
+    var tn = topName(sc.topId);
+    // Find topic type
+    var tp = S.topics.find(function(t){ return Number(t.id)===Number(sc.topId); });
+    var tpType = tp && tp.type ? tp.type : '';
+    // Instructors - full name
+    var insArr = (sc.insIds || []).map(function(id) {
+      var inst = S.instructors.find(function(x){ return Number(x.id)===Number(id); });
+      return inst ? { short: inst.pfx + inst.fn, full: inst.pfx + inst.fn + (inst.ln?' '+inst.ln:''), pos: inst.pos||'' } : null;
+    }).filter(Boolean);
+    // Students
+    var stuArr = (sc.stuIds || []).map(function(id) {
+      var stu = S.students.find(function(x){ return Number(x.id)===Number(id); });
+      return stu ? stu.pfx + stu.fn + ' ' + stu.ln + (stu.nick?' ('+stu.nick+')':'') : null;
+    }).filter(Boolean);
+    var tm = sc.tm || '';
+    var color = evColors[idx % 4];
+    var card = '<div style="border-left:4px solid '+color+';background:#fff;border-radius:0 12px 12px 0;'
+      + 'box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden">'
+      // Header bar
+      + '<div style="background:'+color+';padding:10px 16px;display:flex;align-items:center;gap:10px">'
+      + '<span style="background:rgba(255,255,255,.25);color:#fff;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px">'
+      + (tm || '-') + '</span>'
+      + (tpType ? '<span style="background:rgba(255,255,255,.15);color:#fff;font-size:11px;padding:3px 10px;border-radius:12px">' + tpType + '</span>' : '')
+      + '<span style="margin-left:auto;color:rgba(255,255,255,.8);font-size:11px">#'+(idx+1)+'</span>'
+      + '</div>'
+      // Body
+      + '<div style="padding:14px 16px">'
+      // Topic
+      + '<div style="font-weight:700;font-size:15px;color:var(--txt);margin-bottom:10px;line-height:1.4">'
+      + (tn || '-') + '</div>'
+      // Instructors
+      + '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">'
+      + '<div style="font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">\u0e2d\u0e32\u0e08\u0e32\u0e23\u0e22\u0e4c\u0e41\u0e2b\u0e25\u0e48\u0e07\u0e1d\u0e36\u0e01</div>'
+      + (insArr.length ? insArr.map(function(ins){
+          return '<div style="font-size:13px;color:var(--txt)">'
+            + ins.full + (ins.pos ? ' <span style="color:var(--txt3);font-size:11px">(' + ins.pos + ')</span>' : '')
+            + '</div>';
+        }).join('') : '<div style="font-size:12px;color:var(--txt3)">-</div>')
+      + '</div>'
+      // Students
+      + (stuArr.length ? '<div>'
+      + '<div style="font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">\u0e19\u0e28\u0e20.</div>'
+      + '<div style="font-size:12px;color:var(--txt2)">' + stuArr.join(', ') + '</div>'
+      + '</div>' : '')
+      + '</div></div>';
+    return card;
+  }).join('');
+
+  document.getElementById('calDayBody').innerHTML = html;
+  document.getElementById('calDayModal').classList.remove('hidden');
+}
+
+function closeDayModal() {
+  document.getElementById('calDayModal').classList.add('hidden');
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDayModal();
+});
+
 </script>
+<!-- Calendar Day Detail Modal -->
+<div class="moverlay hidden" id="calDayModal" onclick="if(event.target===this)closeDayModal()">
+  <div class="modal" style="width:480px;max-width:95vw;max-height:80vh;overflow-y:auto;padding:0">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--cream2);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--txt)" id="calDayTitle"></div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:2px" id="calDayCount"></div>
+      </div>
+      <button onclick="closeDayModal()" style="border:none;background:none;font-size:22px;cursor:pointer;color:var(--txt3);padding:4px 8px;border-radius:6px;line-height:1">&times;</button>
+    </div>
+    <div id="calDayBody" style="padding:16px 20px"></div>
+  </div>
+</div>
+
 </body>
 </html>
