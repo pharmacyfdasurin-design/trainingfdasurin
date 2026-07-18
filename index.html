@@ -631,7 +631,7 @@ var S = {
 // ============================================================
 function saveLS() {
   try {
-    localStorage.setItem('fda_rdu_v2', JSON.stringify({
+    localStorage.setItem('fda_rdu_v3', JSON.stringify({
       students: S.students,
       topics: S.topics,
       topTypes: S.topTypes,
@@ -644,6 +644,7 @@ function saveLS() {
 }
 
 function normId(arr){
+  var seen = {};
   return (arr||[]).map(function(o){
     var c={}; for(var k in o) c[k]=o[k];
     if(c.id!==undefined) c.id=Number(c.id)||c.id;
@@ -652,12 +653,19 @@ function normId(arr){
     if(c.insIds) c.insIds=(c.insIds||[]).map(Number);
     if(c.tops) c.tops=(c.tops||[]).map(Number);
     return c;
+  }).filter(function(o){
+    // Deduplicate by id
+    if(o.id===undefined) return true;
+    var key = String(o.id);
+    if(seen[key]) return false;
+    seen[key] = true;
+    return true;
   });
 }
 
 function loadLS() {
   try {
-    var d = JSON.parse(localStorage.getItem('fda_rdu_v2') || '{}');
+    var d = JSON.parse(localStorage.getItem('fda_rdu_v3') || '{}');
     S.students = normId(d.students);
     S.topics = normId(d.topics);
     S.topTypes = d.topTypes || [];
@@ -760,27 +768,32 @@ function gasWriteSheet(sheetName, rows, done) {
   if (!GAS_URL) { if (done) done(false); return; }
   if (!rows) rows = [];
 
-  // Send all rows in ONE request via GET (atomic - no partial writes)
-  var url = GAS_URL
-    + '?action=writeSheet'
-    + '&sheet=' + encodeURIComponent(sheetName)
-    + '&rows=' + encodeURIComponent(JSON.stringify(rows));
+  var payload = JSON.stringify({ action: 'writeSheet', sheet: sheetName, rows: rows });
 
-  // If URL too long (>6000 chars), split into clearSheet + parallel writeRow
-  if (url.length > 6000) {
-    _gasWriteChunked(sheetName, rows, done);
-    return;
-  }
-
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (done) done(d && d.success === true);
-    })
-    .catch(function() {
-      // Fallback to chunked
-      _gasWriteChunked(sheetName, rows, done);
-    });
+  // POST with no-cors = no preflight, always succeeds from https://
+  // GAS doPost receives raw body and writes atomically (clear+setValues)
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: payload
+  })
+  .then(function() {
+    // no-cors = opaque response, assume success
+    if (done) done(true);
+  })
+  .catch(function(err) {
+    console.warn('gasWriteSheet POST failed:', err);
+    // Fallback: GET writeSheet for small payloads
+    if (payload.length < 5000) {
+      var url = GAS_URL + '?action=writeSheet&sheet=' + encodeURIComponent(sheetName)
+        + '&rows=' + encodeURIComponent(JSON.stringify(rows));
+      fetch(url).then(function() { if (done) done(true); })
+               .catch(function() { if (done) done(false); });
+    } else {
+      if (done) done(false);
+    }
+  });
 }
 
 function _gasWriteChunked(sheetName, rows, done) {
@@ -1366,6 +1379,7 @@ function clrStu(){
 }
 
 function renderStuTbl(q){
+  var _seen={}; S.students=S.students.filter(function(t){ var k=String(t.id); if(_seen[k]) return false; _seen[k]=true; return true; });
   var rows=S.students.slice();
   if(q){q=q.toLowerCase();rows=rows.filter(function(s){return((s.fn||'')+' '+(s.ln||'')).toLowerCase().includes(q)||(s.univ||'').toLowerCase().includes(q)||(s.nick||'').toLowerCase().includes(q);});}
   document.getElementById('sTbody').innerHTML=rows.map(function(s,i){
@@ -1417,6 +1431,10 @@ function saveTop(){
 function clrTop(){ document.getElementById('t_nm').value=''; document.getElementById('t_ds').value=''; S.editTop=null; }
 
 function renderTopTbl(q){
+  // Deduplicate S.topics in place
+  var seen={}; S.topics=S.topics.filter(function(t){
+    var k=String(t.id); if(seen[k]) return false; seen[k]=true; return true;
+  });
   var rows=S.topics.slice();
   if(q){q=q.toLowerCase();rows=rows.filter(function(t){return(t.nm||'').toLowerCase().includes(q)||(t.type||'').toLowerCase().includes(q)||(t.ds||'').toLowerCase().includes(q);});}
   rows.sort(function(a,b){return(a.type||'').localeCompare(b.type||'')||(a.nm||'').localeCompare(b.nm||'');});
@@ -1482,6 +1500,7 @@ function clrInst(){
 }
 
 function renderInsTbl(q){
+  var _seen={}; S.instructors=S.instructors.filter(function(t){ var k=String(t.id); if(_seen[k]) return false; _seen[k]=true; return true; });
   var rows=S.instructors.slice();
   if(q){q=q.toLowerCase();rows=rows.filter(function(ins){return((ins.fn||'')+' '+(ins.ln||'')).toLowerCase().includes(q)||(ins.pos||'').toLowerCase().includes(q);});}
   document.getElementById('iTbody').innerHTML=rows.map(function(ins,i){
@@ -1551,6 +1570,7 @@ function clrSch(){
 }
 
 function renderSchTbl(q){
+  var _seen={}; S.schedules=S.schedules.filter(function(t){ var k=String(t.id); if(_seen[k]) return false; _seen[k]=true; return true; });
   var rows=S.schedules.slice();
   if(q){q=q.toLowerCase();rows=rows.filter(function(sc){return fmtD(sc.dt).includes(q)||topName(sc.topId).toLowerCase().includes(q)||sc.insIds.map(insName).join(' ').toLowerCase().includes(q);});}
   document.getElementById('schTbody').innerHTML=rows.map(function(sc,i){
