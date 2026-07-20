@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบฝึกปฏิบัติงาน นศภ. คบส.สุรินทร์</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -94,6 +95,8 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 .wk-dh{text-align:center;padding:8px 4px;background:var(--cream2);border-radius:var(--rs);font-weight:700;font-size:12px;color:var(--txt);line-height:1.4}
 .wk-dh.tod{background:var(--sky);color:#fff}
 .wk-dh.wknd-h{background:#E8EDEF;color:#999}
+.hol-h{background:#EEEEEE;color:#888}
+.hol-slot{background:#F2F2F2;border:1px solid #E0E0E0}
 .wk-ev{border-left:3px solid var(--sky);background:var(--sky-pale);border-radius:4px;padding:5px 8px;margin-bottom:3px;font-size:10px;line-height:1.4}
 .wk-ev.olv{border-left-color:var(--olive);background:var(--olive-pale)}
 .wk-ev.lv{border-left-color:var(--lav);background:var(--lav-pale)}
@@ -639,7 +642,28 @@ var S = {
   editIns: null,
   editSch: null,
   editAsgn: null
-};
+}
+
+// Holiday lookup map — built once, O(1) access
+var _holMap = {};
+function _normalizeHols(arr) {
+  return (arr||[]).map(function(h) {
+    var raw = h.dt || '';
+    var dt = (typeof raw==='string' && raw.length>=10) ? raw.slice(0,10) : (raw ? dstr(new Date(raw)) : '');
+    return { dt: dt, name: h.name||'วันหยุดราชการ' };
+  }).filter(function(h){ return !!h.dt; });
+}
+function _buildHolMap() {
+  _holMap = {};
+  (S.holidays||[]).forEach(function(h){
+    var raw = h.dt || '';
+    var dt = (typeof raw==='string' && raw.length>=10) ? raw.slice(0,10) : (raw ? dstr(new Date(raw)) : '');
+    if (dt) _holMap[dt] = h.name || 'วันหยุดราชการ';
+  });
+  Object.keys(HOLS||{}).forEach(function(k){ if(!_holMap[k]) _holMap[k]=HOLS[k]; });
+}
+function isHol(ds) { return _holMap[ds] || null; }
+;
 
 // ============================================================
 // LOCAL STORAGE
@@ -687,8 +711,9 @@ function loadLS() {
     S.instructors = normId(d.instructors);
     S.schedules = normId(d.schedules);
     S.assignments = normId(d.assignments);
-    S.holidays = d.holidays || [];
+    S.holidays = _normalizeHols(d.holidays);
   } catch(e) {}
+  _buildHolMap();
 }
 
 function seedDemo() {
@@ -854,8 +879,11 @@ function pullFromGAS(callback, silent) {
     S.instructors = normId(d.instructors || []);
     S.schedules   = normId(d.schedules   || []);
     S.assignments = normId(d.assignments || []);
-    S.holidays    = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
-    saveLS(); refreshDash(); renderCal(); renderWeek();
+    if (d.holidays && d.holidays.length > 0) {
+      // Normalize holiday dates to plain YYYY-MM-DD
+      S.holidays = _normalizeHols(d.holidays);
+    }
+    saveLS(); _buildHolMap(); refreshDash(); renderCal(); renderWeek();
     toast('✅ Sync สำเร็จ — นศภ. ' + S.students.length + ' คน, ตาราง ' + S.schedules.length + ' รายการ');
     if (callback) callback(d);
   });
@@ -905,8 +933,10 @@ function testGASConnection(cb) {
       S.instructors = normId(d.instructors || []);
       S.schedules   = normId(d.schedules   || []);
       S.assignments = normId(d.assignments || []);
-      S.holidays = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
-      saveLS(); refreshAll();
+      if (d.holidays && d.holidays.length > 0) {
+        S.holidays = _normalizeHols(d.holidays);
+      }
+      saveLS(); _buildHolMap(); refreshAll();
       toast('\u2705 \u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08 \u2014 ' + (d.students||[]).length + ' \u0E19\u0E28\u0E20., ' + (d.topics||[]).length + ' \u0E2B\u0E31\u0E27\u0E02\u0E49\u0E2D');
       if (cb) cb(true, d);
     } else {
@@ -932,8 +962,11 @@ function fullSync() {
     S.instructors = normId(d.instructors || []);
     S.schedules   = normId(d.schedules   || []);
     S.assignments = normId(d.assignments || []);
-    S.holidays    = (d.holidays && d.holidays.length > 0) ? d.holidays : S.holidays;
-    saveLS(); refreshDash(); renderCal(); renderWeek();
+    if (d.holidays && d.holidays.length > 0) {
+      // Normalize holiday dates to plain YYYY-MM-DD
+      S.holidays = _normalizeHols(d.holidays);
+    }
+    saveLS(); _buildHolMap(); refreshDash(); renderCal(); renderWeek();
     toast('✅ Sync สำเร็จ — นศภ. ' + S.students.length + ' คน, ตาราง ' + S.schedules.length + ' รายการ');
   });
 }
@@ -969,13 +1002,7 @@ function fmtS(d) {
   } catch(e){ return d; }
 }
 
-function isHol(ds) {
-  if (HOLS[ds]) return HOLS[ds];
-  for (var _i=0;_i<S.holidays.length;_i++) {
-    if (S.holidays[_i].dt===ds) return S.holidays[_i].name;
-  }
-  return null;
-}
+
 
 function uid() { return Date.now() + Math.floor(Math.random()*10000); }
 
@@ -1273,7 +1300,7 @@ function renderWeek(){
   days.forEach(function(d){
     var ds=dstr(d),dow=d.getDay(),hol=isHol(ds),tod=ds===ts;
     var holTxt=hol?('<br><span style="font-size:9px;opacity:.7">'+hol+'</span>'):''; 
-    html+='<div class="wk-dh'+(tod?' tod':'')+(dow===0||dow===6?' wknd-h':'')+'">'+dnames[dow]+' '+d.getDate()+holTxt+'</div>';
+    html+='<div class="wk-dh'+(tod?' tod':'')+(dow===0||dow===6?' wknd-h':hol?' hol-h':'')+'">'+dnames[dow]+' '+d.getDate()+holTxt+'</div>';
   });
   html+='</div>';
 
@@ -1296,7 +1323,8 @@ function renderWeek(){
 
       days.forEach(function(d){
         var ds=dstr(d),dow=d.getDay(),hol=isHol(ds),wknd=dow===0||dow===6;
-        html+='<div class="wk-slot'+(wknd||hol?' wknd':'')+'">'; 
+        html+='<div class="wk-slot'+(wknd?' wknd':hol?' hol-slot':'')+'">'; 
+        if(hol&&!wknd) html+='<div style="font-size:9px;color:#999;padding:2px 0">'+hol+'</div>';
         if(!wknd){
           var schs=dayEvs[ds].filter(function(sc){return sc.tm===tkey;});
           schs.forEach(function(sc,sii){
@@ -1706,7 +1734,7 @@ function delAsgn(id){
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', function(){
-  loadLS();
+  loadLS(); _buildHolMap();
   var today=new Date();
   document.getElementById('todayLbl').textContent=today.toLocaleDateString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
   S.calY=today.getFullYear(); S.calM=today.getMonth();
@@ -2041,7 +2069,7 @@ function saveHol() {
   if (!S.schedules.length && _schBkp.length) {
     S.schedules = _schBkp; saveLS();
   }
-  renderHolTbl(); refreshDash(); renderCal(); renderWeek();
+  _buildHolMap(); renderHolTbl(); refreshDash(); renderCal(); renderWeek();
   clrHol();
   toast('✅ บันทึกวันหยุดสำเร็จ');
 }
@@ -2053,7 +2081,7 @@ function delHol(dt) {
   if (!confirm('ลบวันหยุดนี้?')) return;
   S.holidays = S.holidays.filter(function(h) { return h.dt !== dt; });
   saveLS(); syncSheet('Holidays', S.holidays);
-  renderHolTbl(); renderCal(); renderWeek();
+  _buildHolMap(); renderHolTbl(); renderCal(); renderWeek();
   toast('ลบวันหยุดแล้ว');
 }
 function renderHolTbl() {
