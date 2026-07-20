@@ -304,6 +304,22 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
     <div class="ch"><span>👩‍🎓</span><div class="ch-t">นักศึกษาที่กำลังฝึกปฏิบัติงาน</div><div class="ch-s" id="actCnt"></div></div>
     <div class="cb" id="stuList"></div>
   </div>
+  <!-- Assignment Widget -->
+  <div class="card" style="margin-top:20px">
+    <div class="ch"><span>&#9733;</span><div class="ch-t">งานที่มอบหมายทั้งหมด</div><div class="ch-s" id="asgnDashCnt"></div></div>
+    <div class="cb" style="overflow-x:auto">
+      <table class="tbl" style="min-width:600px">
+        <thead><tr>
+          <th>หัวข้องาน</th>
+          <th>อาจารย์ผู้มอบหมาย</th>
+          <th>นศภ.</th>
+          <th>กำหนดส่ง</th>
+          <th>สถานะ</th>
+        </tr></thead>
+        <tbody id="asgnDashTbody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- CAL MONTH -->
@@ -509,7 +525,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
   </div>
   <div id="asTbl" class="hidden">
     <div class="card"><div class="ch"><span>📋</span><div class="ch-t">รายการงานทั้งหมด</div></div>
-    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>หัวข้อ</th><th>รายละเอียด</th><th>นักศึกษา</th><th>กำหนดส่ง</th><th>จัดการ</th></tr></thead><tbody id="asTbody"></tbody></table></div></div>
+    <div class="cb" style="overflow-x:auto"><table class="dt"><thead><tr><th>#</th><th>หัวข้องาน</th><th>รายละเอียด</th><th>นศภ.</th><th>อาจารย์ผู้มอบหมาย</th><th>กำหนดส่ง</th><th>จัดการ</th></tr></thead><tbody id="asTbody"></tbody></table></div></div>
   </div>
 </div>
 
@@ -1093,6 +1109,7 @@ function refreshDash() {
 
   document.getElementById('sv-active').innerHTML = active.length + '<span class="stat-u">คน</span>';
   document.getElementById('actCnt').textContent = active.length + ' คน (ณ วันนี้)';
+  renderAsgnDash();
 
   if (active.length) {
     var st0=new Date(active[0].st); st0.setHours(0,0,0,0);
@@ -1128,6 +1145,8 @@ function refreshDash() {
   var tmrStr = dstr(new Date(today.getTime()+86400000));
   var tmrSchs = S.schedules.filter(function(s){return dstr(new Date(s.dt||''))===tmrStr;})
     .sort(function(a,b){return a.tm.localeCompare(b.tm);});
+  var todayAsgns = S.assignments.filter(function(a){return dstr(new Date(a.due||''))===ts;});
+  var tmrAsgns   = S.assignments.filter(function(a){return dstr(new Date(a.due||''))===tmrStr;});
 
   var ahtml='';
   if (todaySchs.length) {
@@ -1147,6 +1166,7 @@ function refreshDash() {
   if (!ahtml) ahtml='<div style="color:var(--txt3);font-size:12px;text-align:center;padding:10px">ไม่มีกำหนดการฝึกงานวันนี้</div>';
   document.getElementById('alertBox').innerHTML=ahtml;
   document.getElementById('alDate').textContent=today.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderAsgnDash();
 }
 
 // ============================================================
@@ -1181,6 +1201,14 @@ function renderCal() {
         var tm=ev.tm?ev.tm.split('-')[0]+' ':'';
         var sn=(tm+tn).length>28?(tm+tn).slice(0,26)+'…':tm+tn;
         html+='<div class="cal-ev"><div class="cal-bul" style="background:'+evColors[ei%4]+'"></div><div class="cal-evt">'+sn+'</div></div>';
+      });
+      // Assignments due on this day
+      var asgns=S.assignments.filter(function(a){return dstr(new Date(a.due||''))===ds;});
+      asgns.forEach(function(a,ai){
+        var tn=topName(a.topId);
+        var lbl='[*] '+(tn.length>22?tn.slice(0,20)+'…':tn);
+        html+='<div class="cal-ev"><div class="cal-bul" style="background:#C8973A"></div>'
+          +'<div class="cal-evt" style="color:#9B6B1A;font-style:italic">'+lbl+'</div></div>';
       });
     }
     // Add click handler if there are events
@@ -1640,11 +1668,16 @@ function clrAsgn(){
 
 function renderAsgnTbl(){
   document.getElementById('asTbody').innerHTML=S.assignments.map(function(a,i){
+    var insNames=((a.insIds)||[]).map(function(id){
+      var inst=S.instructors.find(function(x){return Number(x.id)===Number(id);});
+      return inst?inst.pfx+inst.fn:'';
+    }).filter(Boolean).join(', ');
     return '<tr><td>'+(i+1)+'</td>'
-      +'<td style="font-weight:500;font-size:11px">'+topName(a.topId)+'</td>'
-      +'<td style="font-size:11px;max-width:220px">'+a.det+'</td>'
+      +'<td style="font-weight:500;font-size:12px">'+topName(a.topId)+'</td>'
+      +'<td style="font-size:11px;max-width:140px;color:var(--txt2)">'+a.det+'</td>'
       +'<td style="font-size:11px">'+a.stuIds.map(stuName).join(', ')+'</td>'
-      +'<td style="white-space:nowrap">'+fmtD(a.due)+'</td>'
+      +'<td style="font-size:12px;color:var(--txt)">'+insNames+'</td>'
+      +'<td style="white-space:nowrap;font-size:12px;color:var(--sky)">'+fmtD(a.due)+'</td>'
       +'<td><div class="abtns">'
       +'<button class="ibtn ibtn-e" onclick="editAsgn('+a.id+')">✏️</button>'
       +'<button class="ibtn ibtn-d" onclick="delAsgn('+a.id+')">[del]</button>'
@@ -2185,7 +2218,9 @@ function openDayModal(ds) {
   var evs = S.schedules
     .filter(function(s){ return dstr(new Date(s.dt||'')) === ds; })
     .sort(function(a,b){ return (a.tm||'').localeCompare(b.tm||''); });
-  if (!evs.length) return;
+  var dayAsgns = S.assignments
+    .filter(function(a){ return dstr(new Date(a.due||'')) === ds; });
+  if (!evs.length && !dayAsgns.length) return;
 
   var d = new Date(ds + 'T12:00:00');
   var dayNames = ['\u0e2d\u0e32\u0e17\u0e34\u0e15\u0e22\u0e4c','\u0e08\u0e31\u0e19\u0e17\u0e23\u0e4c','\u0e2d\u0e31\u0e07\u0e04\u0e32\u0e23','\u0e1e\u0e38\u0e18','\u0e1e\u0e24\u0e2b\u0e31\u0e2a\u0e1a\u0e14\u0e35','\u0e28\u0e38\u0e01\u0e23\u0e4c','\u0e40\u0e2a\u0e32\u0e23\u0e4c'];
@@ -2247,7 +2282,28 @@ function openDayModal(ds) {
     return card;
   }).join('');
 
+  // Add assignment cards
+  dayAsgns.forEach(function(a) {
+    var tn = topName(a.topId);
+    var ins = (a.insIds||[]).map(function(id){
+      var inst=S.instructors.find(function(x){return Number(x.id)===Number(id);});
+      return inst?inst.pfx+inst.fn:'';
+    }).filter(Boolean).join(', ');
+    html += '<div style="border-left:4px solid #C8973A;background:#FBF8F2;border-radius:0 12px 12px 0;'
+      + 'box-shadow:0 3px 12px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden">'
+      + '<div style="background:#C8973A;padding:10px 16px;display:flex;align-items:center;gap:10px">'
+      + '<span style="background:rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">[*] งานมอบหมาย</span>'
+      + '</div>'
+      + '<div style="padding:14px 16px">'
+      + '<div style="font-weight:700;font-size:15px;color:var(--txt);margin-bottom:8px">' + (tn||'-') + '</div>'
+      + (a.det?'<div style="font-size:13px;color:var(--txt2);margin-bottom:6px">[รายละเอียด] '+a.det+'</div>':'')
+      + (ins?'<div style="font-size:13px;color:var(--txt2)">[อาจารย์] '+ins+'</div>':'')
+      + '</div></div>';
+  });
+
   document.getElementById('calDayBody').innerHTML = html;
+  document.getElementById('calDayCount').textContent =
+    evs.length + ' ตาราง' + (dayAsgns.length?' + '+dayAsgns.length+' งานมอบหมาย':'');
   document.getElementById('calDayModal').classList.remove('hidden');
 }
 
@@ -2259,6 +2315,45 @@ function closeDayModal() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeDayModal();
 });
+
+
+function renderAsgnDash() {
+  var tbody = document.getElementById('asgnDashTbody');
+  var cnt   = document.getElementById('asgnDashCnt');
+  if (!tbody) return;
+  var today = dstr(new Date());
+  var rows  = S.assignments.slice().sort(function(a, b) {
+    return (a.due || '').localeCompare(b.due || '');
+  });
+  document.getElementById('asgnDashCnt').textContent = rows.length + ' \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23';
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:20px">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e07\u0e32\u0e19\u0e21\u0e2d\u0e1a\u0e2b\u0e21\u0e32\u0e22</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(a) {
+    var tn = topName(a.topId);
+    var ins = (a.insIds || []).map(function(id) {
+      var inst = S.instructors.find(function(x){ return Number(x.id) === Number(id); });
+      return inst ? inst.pfx + inst.fn : '';
+    }).filter(Boolean).join(', ');
+    var stus = (a.stuIds || []).map(stuName).join(', ');
+    var dueStr = fmtD(a.due);
+    var isPast  = a.due && dstr(new Date(a.due||'')) < today;
+    var isToday = a.due && dstr(new Date(a.due||'')) === today;
+    var statusHtml = isToday
+      ? '<span style="background:#C8973A;color:#fff;font-size:11px;padding:2px 10px;border-radius:12px">\u0e04\u0e23\u0e1a\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49</span>'
+      : isPast
+        ? '<span style="background:#E57373;color:#fff;font-size:11px;padding:2px 10px;border-radius:12px">\u0e40\u0e25\u0e22\u0e01\u0e33\u0e2b\u0e19\u0e14</span>'
+        : '<span style="background:var(--sky-pale);color:var(--sky);font-size:11px;padding:2px 10px;border-radius:12px">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e04\u0e23\u0e1a</span>';
+    return '<tr>'
+      + '<td style="font-weight:600;font-size:13px">' + tn + (a.det ? '<div style="font-size:11px;color:var(--txt3);font-weight:400">' + a.det + '</div>' : '') + '</td>'
+      + '<td style="font-size:12px">' + (ins || '-') + '</td>'
+      + '<td style="font-size:12px">' + (stus || '-') + '</td>'
+      + '<td style="white-space:nowrap;font-size:12px;color:' + (isPast?'#E57373':isToday?'#C8973A':'var(--txt)') + '">' + dueStr + '</td>'
+      + '<td>' + statusHtml + '</td>'
+      + '</tr>';
+  }).join('');
+}
 
 </script>
 <!-- Calendar Day Detail Modal -->
