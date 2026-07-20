@@ -618,7 +618,7 @@ body{font-family:'Sarabun',sans-serif;background:#F0F5F2;color:var(--txt);min-he
 // CONFIG
 // ============================================================
 var SHEET_ID = '17vD8KfzfEWSFTy2NjxzzPknHUCs_pW8qI_tiBeZG3m4';
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxHzEP8zHv2hFhzLvSCPe-4eCnsgOvqi6kDjaY8fNin7Y79UYdH6WixwvMAmUhh_dKEqg/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwZr2EFWqbWGhmWkbD9uKsB_c9JuYZ17aUWiOm5qmUu1oDvK0bYFtsng3gt-pKHpou2OQ/exec';
 var ADMIN_PW = 'fdasurin12345';
 
 // ============================================================
@@ -649,9 +649,22 @@ var _holMap = {};
 function _normalizeHols(arr) {
   return (arr||[]).map(function(h) {
     var raw = h.dt || '';
-    var dt = (typeof raw==='string' && raw.length>=10) ? raw.slice(0,10) : (raw ? dstr(new Date(raw)) : '');
+    if (!raw) return null;
+    var dt;
+    if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) {
+      // Plain YYYY-MM-DD: parse with local noon to avoid DST/TZ edge cases
+      dt = raw.trim();
+    } else {
+      // ISO timestamp or other: use LOCAL date components
+      var d = new Date(raw);
+      if (isNaN(d)) return null;
+      var yy = d.getFullYear();
+      var mm = d.getMonth()+1;
+      var dd = d.getDate();
+      dt = yy+'-'+(mm<10?'0'+mm:mm)+'-'+(dd<10?'0'+dd:dd);
+    }
     return { dt: dt, name: h.name||'วันหยุดราชการ' };
-  }).filter(function(h){ return !!h.dt; });
+  }).filter(function(h){ return h && h.dt; });
 }
 function _buildHolMap() {
   _holMap = {};
@@ -982,8 +995,12 @@ var HOLS = {
 };
 
 function dstr(d) {
+  if (!d) return '';
+  // Plain YYYY-MM-DD string: return as-is (no timezone conversion needed)
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.trim())) return d.trim();
   var dt = (typeof d === 'string') ? new Date(d) : d;
-  if (isNaN(dt)) return '';
+  if (!dt || isNaN(dt)) return '';
+  // Use LOCAL date components (getFullYear/getMonth/getDate)
   var y = dt.getFullYear(), m = dt.getMonth()+1, day = dt.getDate();
   return y + '-' + (m<10?'0'+m:m) + '-' + (day<10?'0'+day:day);
 }
@@ -991,6 +1008,13 @@ function dstr(d) {
 function fmtD(d) {
   if (!d) return '';
   try {
+    var s = String(d);
+    // Plain YYYY-MM-DD: parse as local noon to avoid timezone shift
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      var parts = s.split('-');
+      var dt = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]), 12, 0, 0);
+      return dt.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
+    }
     return new Date(d).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'});
   } catch(e){ return d; }
 }
